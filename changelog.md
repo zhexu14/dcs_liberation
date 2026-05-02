@@ -1,3 +1,11 @@
+# 15.0.0
+
+Saves from 14.x are not compatible with 15.0.0.
+
+## Features/Improvements
+
+* **[Data]** Updated weapons introduction year and fallback data. Restriction of weapons availability now enabled by default. 
+
 # 14.1.0
 
 Saves from 14.x are compatible with 14.1.0.
