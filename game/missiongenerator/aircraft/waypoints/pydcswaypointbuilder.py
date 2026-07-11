@@ -82,6 +82,7 @@ class PydcsWaypointBuilder:
         waypoint.alt_type = self.waypoint.alt_type
         tot = self.flight.flight_plan.tot_for_waypoint(self.waypoint)
         if tot is not None:
+            tot += self.flight.combat_delay
             self.set_waypoint_tot(waypoint, tot, self.generated_waypoint_idx)
         self.add_tasks(waypoint)
         return waypoint
