@@ -97,6 +97,11 @@ class CombatInitiator:
 
         if flight.state.is_at_ip and not flight.state.avoid_further_combat:
             return AtIp(timedelta(minutes=1), flight)
+        
+        for package_flight in flight.package.flights:
+            if package_flight.state.in_combat and isinstance(package_flight.state.combat, AtIp):
+                return AtIp(timedelta(minutes=1), flight)
+                
 
         position = flight.state.estimate_position()
 
