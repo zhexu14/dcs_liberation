@@ -37,6 +37,7 @@ class InFlight(FlightState, ABC):
         self.has_aborted = has_aborted
         self.current_waypoint = waypoints[self.waypoint_index]
         if self.waypoint_index + 1 == len(waypoints) or self.current_waypoint.waypoint_type == FlightWaypointType.LANDING_POINT:
+            # Last waypoint of flight. Set dummy values for next_waypoint and total_time_to_next_waypoint as flight will be deleted.
             self.next_waypoint = waypoints[self.waypoint_index]
             self.total_time_to_next_waypoint = timedelta(seconds=1)
         else:
