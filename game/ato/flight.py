@@ -85,7 +85,7 @@ class Flight(SidcDescribable):
 
         # Used for simulating the travel to first contact.
         self.state: FlightState = Uninitialized(self, squadron.settings)
-        
+
         # Keeps track of delays to the flight due to combat
         self.combat_delay = timedelta()
 

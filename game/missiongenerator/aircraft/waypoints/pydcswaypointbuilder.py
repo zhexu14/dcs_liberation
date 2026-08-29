@@ -85,7 +85,7 @@ class PydcsWaypointBuilder:
             # When setting TOT for DCS waypoint, account for any delays due to combat so the TOT is not
             # impossible to reach.
             self.set_waypoint_tot(
-                waypoint, tot + self.flight_combat_delay, self.generated_waypoint_idx
+                waypoint, tot + self.flight.combat_delay, self.generated_waypoint_idx
             )
         self.add_tasks(waypoint)
         return waypoint

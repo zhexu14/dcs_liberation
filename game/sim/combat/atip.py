@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Iterator
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from .frozencombat import FrozenCombat
 from .. import GameUpdateEvents
@@ -18,7 +18,9 @@ if TYPE_CHECKING:
 
 class AtIp(FrozenCombat):
     def __init__(self, freeze_duration: timedelta, flight: Flight) -> None:
-        if not isinstance(flight.flight_plan, FormationAttackFlightPlan) or not isinstance(flight.state, InFlight):
+        if not isinstance(
+            flight.flight_plan, FormationAttackFlightPlan
+        ) or not isinstance(flight.state, InFlight):
             # If flight isn't a type with an Ip, just used the passed in freeze duration as we do not have any
             # more information.
             super().__init__(freeze_duration)
@@ -30,6 +32,7 @@ class AtIp(FrozenCombat):
             # No other elements of the package are in Ip combat so this must be the first flight to reach the Ip.
             # Set the freeze duration to the expected time to reach the split point i.e. when the flight is planned
             # to be disengaging.
+            print(flight)
             super().__init__(self._freeze_duration_to_reach_split_point(flight))
         self.flight = flight
 
@@ -58,20 +61,24 @@ class AtIp(FrozenCombat):
         self.flight.state.exit_combat(
             events, time, elapsed_time, avoid_further_combat=True
         )
-                    
+
     @staticmethod
-    def _freeze_duration_to_reach_split_point(flight: Flight) -> InFlight:
+    def _freeze_duration_to_reach_split_point(flight: Flight) -> timedelta:
         flight_state = flight.state
-        assert isinstance(flight_state, InFlight)
+        if not isinstance(flight.state, InFlight):
+            raise ValueError()
         while flight_state.current_waypoint != flight.flight_plan.layout.split:
             flight_state = flight_state.next_waypoint_state()
             assert isinstance(flight_state, InFlight)
-        return flight.flight_plan.tot_for_waypoint(flight_state.current_waypoint) - flight.flight_plan.tot_for_waypoint(flight.state.current_waypoint)
-        
+        return flight.flight_plan.tot_for_waypoint(
+            flight_state.current_waypoint
+        ) - flight.flight_plan.tot_for_waypoint(flight.state.current_waypoint)
+
     @staticmethod
-    def _freeze_duration_to_match_package(flight: Flight) -> InFlight:
+    def _freeze_duration_to_match_package(flight: Flight) -> Optional[timedelta]:
         for package_flight in flight.package.flights:
-            if package_flight.state.in_combat and isinstance(package_flight.state.combat, AtIp):
+            if package_flight.state.in_combat and isinstance(package_flight.state, InCombat) and isinstance(
+                package_flight.state.combat, AtIp
+            ):
                 return package_flight.state.combat.freeze_duration
-                
         return None

@@ -17,6 +17,7 @@ from ..gameupdateevents import GameUpdateEvents
 if TYPE_CHECKING:
     from game import Game
     from game.ato import Flight
+    from game.ato.flightstate.incombat import InCombat
     from .frozencombat import FrozenCombat
 
 
@@ -98,13 +99,14 @@ class CombatInitiator:
         # When a flight reaches its IP, initiate AtIp combat
         if flight.state.is_at_ip and not flight.state.avoid_further_combat:
             return AtIp(timedelta(minutes=1), flight)
-        # If any other flights in a package reaches their IP, initiate AtIp combat so that a package 
-        # stays together. Otherwise, one flight of package will enter frozen combat while other 
-        # flights continue, leading to actual TOTs being missed. 
+        # If any other flights in a package reaches their IP, initiate AtIp combat so that a package
+        # stays together. Otherwise, one flight of package will enter frozen combat while other
+        # flights continue, leading to actual TOTs being missed.
         for package_flight in flight.package.flights:
-            if package_flight.state.in_combat and isinstance(package_flight.state.combat, AtIp):
+            if package_flight.state.in_combat and isinstance(package_flight.state, InCombat) and isinstance(
+                package_flight.state.combat, AtIp
+            ):
                 return AtIp(timedelta(minutes=1), flight)
-                
 
         position = flight.state.estimate_position()
 
