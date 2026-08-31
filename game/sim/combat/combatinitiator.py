@@ -13,11 +13,11 @@ from .defendingsam import DefendingSam
 from .joinablecombat import JoinableCombat
 from .samengagementzones import SamEngagementZones
 from ..gameupdateevents import GameUpdateEvents
+from game.ato.flightstate.incombat import InCombat
 
 if TYPE_CHECKING:
     from game import Game
     from game.ato import Flight
-    from game.ato.flightstate.incombat import InCombat
     from .frozencombat import FrozenCombat
 
 
@@ -103,8 +103,10 @@ class CombatInitiator:
         # stays together. Otherwise, one flight of package will enter frozen combat while other
         # flights continue, leading to actual TOTs being missed.
         for package_flight in flight.package.flights:
-            if package_flight.state.in_combat and isinstance(package_flight.state, InCombat) and isinstance(
-                package_flight.state.combat, AtIp
+            if (
+                package_flight.state.in_combat
+                and isinstance(package_flight.state, InCombat)
+                and isinstance(package_flight.state.combat, AtIp)
             ):
                 return AtIp(timedelta(minutes=1), flight)
 
