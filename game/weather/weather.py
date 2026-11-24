@@ -5,6 +5,7 @@ import logging
 import math
 import random
 from abc import ABC, abstractmethod
+from enum import Enum, unique
 from typing import Optional, TYPE_CHECKING
 
 from dcs.weather import Weather as PydcsWeather
@@ -24,6 +25,24 @@ from game.weather.wind import WindConditions
 
 if TYPE_CHECKING:
     from game.theater.seasonalconditions import SeasonalConditions
+
+
+@unique
+class WeatherPreset(Enum):
+    CLEAR_SKIES = "Clear Skies"
+    CLOUDY = "Cloudy"
+    RAINING = "Raining"
+    THUNDERSTORMS = "Thunderstorms"
+
+    @property
+    def hierarchy_rank(self) -> int:
+        """Lower rank = clearer weather. Used for minimum-preset filtering."""
+        return {
+            WeatherPreset.CLEAR_SKIES: 0,
+            WeatherPreset.CLOUDY: 1,
+            WeatherPreset.RAINING: 2,
+            WeatherPreset.THUNDERSTORMS: 3,
+        }[self]
 
 
 class Weather(ABC):
@@ -302,3 +321,16 @@ class Thunderstorm(Weather):
             thickness=self.random_cloud_thickness(),
             precipitation=PydcsWeather.Preceptions.Thunderstorm,
         )
+
+
+_WEATHER_TO_PRESET: dict[type[Weather], WeatherPreset] = {
+    ClearSkies: WeatherPreset.CLEAR_SKIES,
+    Cloudy: WeatherPreset.CLOUDY,
+    Raining: WeatherPreset.RAINING,
+    Thunderstorm: WeatherPreset.THUNDERSTORMS,
+}
+
+
+def weather_preset_for(weather_cls: type[Weather]) -> WeatherPreset:
+    """Return the WeatherPreset enum value for a Weather class."""
+    return _WEATHER_TO_PRESET[weather_cls]

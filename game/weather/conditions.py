@@ -9,7 +9,7 @@ from game.settings import Settings
 from game.theater import ConflictTheater, SeasonalConditions
 from game.theater.seasonalconditions import determine_season
 from game.timeofday import TimeOfDay, to_datetime
-from game.weather.weather import Weather, Thunderstorm, Raining, Cloudy, ClearSkies
+from game.weather.weather import Weather, Thunderstorm, Raining, Cloudy, ClearSkies, weather_preset_for, WeatherPreset
 
 
 @dataclass
@@ -38,7 +38,9 @@ class Conditions:
         return cls(
             time_of_day=time_of_day,
             start_time=_start_time,
-            weather=cls.generate_weather(theater.seasonal_conditions, day, time_of_day),
+            weather=cls.generate_weather(
+                theater.seasonal_conditions, day, time_of_day, settings.weather_minimum
+            ),
         )
 
     @classmethod
@@ -57,10 +59,12 @@ class Conditions:
         seasonal_conditions: SeasonalConditions,
         day: datetime.date,
         time_of_day: TimeOfDay,
+        min_preset: WeatherPreset = WeatherPreset.THUNDERSTORMS,
     ) -> Weather:
         season = determine_season(day)
         logging.debug("Weather: Season {}".format(season))
         weather_chances = seasonal_conditions.weather_type_chances[season]
+        min_rank = min_preset.hierarchy_rank
         chances: dict[
             type[ClearSkies] | type[Cloudy] | type[Raining] | type[Thunderstorm], float
         ] = {
@@ -69,9 +73,12 @@ class Conditions:
             Cloudy: weather_chances.cloudy,
             ClearSkies: weather_chances.clear_skies,
         }
-        logging.debug("Weather: Chances {}".format(weather_chances))
-        weather_type = random.choices(
+        # Filter out weather presets worse (higher rank) than the minimum
+        chances = {
+            cls_: w for cls_, w in chances.items() if weather_preset_for(cls_).hierarchy_rank <= min_rank
+        }
+        logging.debug("Weather: Chances {}, min_rank={}".format(weather_chances, min_rank))
+        chosen_cls = random.choices(
             list(chances.keys()), weights=list(chances.values())
         )[0]
-        logging.debug("Weather: Type {}".format(weather_type))
-        return weather_type(seasonal_conditions, day, time_of_day)
+        return chosen_cls(seasonal_conditions, day, time_of_day)

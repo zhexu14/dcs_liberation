@@ -18,6 +18,7 @@ from .optiondescription import OptionDescription, SETTING_DESCRIPTION_KEY
 from .skilloption import skill_option
 from ..ato.starttype import StartType
 from ..persistence.paths import liberation_user_dir
+from ..weather.weather import WeatherPreset
 
 
 @unique
@@ -134,6 +135,22 @@ class Settings:
         page=DIFFICULTY_PAGE,
         section=MISSION_DIFFICULTY_SECTION,
         default=False,
+    )
+    weather_minimum: WeatherPreset = choices_option(
+        "Weather minimum",
+        page=DIFFICULTY_PAGE,
+        section=MISSION_DIFFICULTY_SECTION,
+        choices={
+            v.value: v
+            for v in [
+                WeatherPreset.CLEAR_SKIES,
+                WeatherPreset.CLOUDY,
+                WeatherPreset.RAINING,
+                WeatherPreset.THUNDERSTORMS,
+            ]
+        },
+        default=WeatherPreset.THUNDERSTORMS,
+        detail="Lowest permissible weather preset for generated missions. Clear Skies > Cloudy > Raining > Thunderstorms.",
     )
     # Mission Restrictions
     labels: str = choices_option(
